@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اللوحة التفاعلية - الشروط البرمجية للصف العاشر</title>
+    <!-- خط تجوال الحديث -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+    <!-- مكتبة التأثيرات الملونة الاحتفالية -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --pink-main: #FF6B9B;
+            --pink-soft: #FFB8D1;
+            --purple-main: #8A4FFF;
+            --purple-light: #E8DDFF;
+            --yellow-bright: #FFD166;
+            --blue-bright: #4CC9F0;
+            --green-bright: #06D6A0;
+            --bg-gradient: linear-gradient(135deg, #FFF0F5 0%, #E6E6FA 100%);
+            --card-shadow: 0 15px 35px rgba(138, 79, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: #2B2D42;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* هيدر اللوحة التفاعلية */
+        header {
+            text-align: center;
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            border: 4px solid var(--pink-soft);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--pink-main), var(--purple-main), var(--blue-bright), var(--yellow-bright));
+        }
+
+        h1 {
+            color: var(--purple-main);
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+
+        .teacher-tag {
+            display: inline-block;
+            background: var(--yellow-bright);
+            color: #4A3E00;
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(255, 209, 102, 0.4);
+        }
+
+        /* التبويبات الثلاثة فقط */
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            border: 3px solid #E0E0E0;
+            padding: 14px 28px;
+            border-radius: 20px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-5px);
+            border-color: var(--pink-main);
+        }
+
+        .tab-btn.active {
+            background: var(--purple-main);
+            color: white;
+            border-color: var(--purple-main);
+            box-shadow: 0 8px 25px rgba(138, 79, 255, 0.4);
+        }
+
+        /* حاويات الأقسام */
+        .section-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .section-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* تصميم الكروت البرمجية والتفاعلية */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            border: 3px solid #F0F0F0;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 3px dashed var(--purple-light);
+            padding-bottom: 15px;
+        }
+
+        .card-header .icon {
+            font-size: 2rem;
+            background: var(--purple-light);
+            padding: 10px;
+            border-radius: 16px;
+        }
+
+        .card-header h2 {
+            color: var(--purple-main);
+            font-size: 1.5rem;
+        }
+
+        /* عرض الأكواد LTR */
+        .code-box {
+            background: #1E1E38;
+            color: #F8F8F2;
+            padding: 20px;
+            border-radius: 16px;
+            font-family: 'Fira Code', monospace;
+            direction: ltr;
+            text-align: left;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-keyword { color: #FF79C6; font-weight: bold; }
+        .code-string { color: #F1FA8C; }
+        .code-func { color: #50FA7B; }
+        .code-num { color: #BD93F9; }
+        .code-comment { color: #6272A4; italic; }
+
+        /* أزرار التشغيل والتفاعل */
+        .action-btn {
+            background: linear-gradient(45deg, var(--pink-main), var(--purple-main));
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255, 107, 155, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 107, 155, 0.6);
+        }
+
+        /* منطقة النتائج والمخرجات */
+        .output-console {
+            background: #282A36;
+            color: var(--green-bright);
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            direction: ltr;
+            text-align: left;
+            margin-top: 15px;
+            min-height: 50px;
+            border-left: 5px solid var(--green-bright);
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        /* رسومات وأشكال توضيحية */
+        .illustration-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #FAF8FF;
+            border-radius: 20px;
+            margin-top: 20px;
+            min-height: 180px;
+            text-align: center;
+        }
+
+        /* أبراج الكويت */
+        .towers-svg {
+            width: 120px;
+            height: 150px;
+            transition: transform 0.5s ease;
+        }
+
+        .towers-svg.bounce {
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+
+        /* لوحة تحكم أصوات الشرط البديل */
+        .vote-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .vote-card {
+            background: white;
+            border: 3px solid var(--purple-light);
+            padding: 15px 25px;
+            border-radius: 18px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .vote-card h4 { color: var(--purple-main); margin-bottom: 10px; }
+        .vote-val { font-size: 2rem; font-weight: 900; color: var(--pink-main); margin-bottom: 10px; }
+        
+        .counter-btn {
+            background: var(--purple-light);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--purple-main);
+            transition: 0.2s;
+        }
+
+        .counter-btn:hover {
+            background: var(--purple-main);
+            color: white;
+        }
+
+        /* شريط الفهرسة LTR للشرط المتسلسل */
+        .index-visualizer {
+            display: flex;
+            justify-content: center;
+            direction: ltr;
+            gap: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .index-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #F0F4FF;
+            border: 2px solid var(--blue-bright);
+            padding: 8px 14px;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .index-item.highlight {
+            background: var(--yellow-bright);
+            border-color: #FF9F1C;
+            transform: scale(1.15);
+            box-shadow: 0 5px 15px rgba(255, 209, 102, 0.6);
+        }
+
+        .char-val { font-family: 'Fira Code', monospace; font-size: 1.4rem; font-weight: bold; color: #2B2D42; }
+        .idx-val { font-size: 0.85rem; color: #8D99AE; margin-top: 4px; font-weight: 700; }
+
+        /* المبالغ والتصنيفات النقدية */
+        .money-badge {
+            background: var(--yellow-bright);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- هيدر اللوحة التفاعلية -->
+    <header>
+        <h1>✨ اللوحة التفاعلية: الشروط البرمجية في بايثون ✨</h1>
+        <p style="color: #666; font-weight: bold; margin-bottom: 10px;">للصف العاشر - مادة الحاسوب</p>
+        <span class="teacher-tag">👩‍🏫 إعداد المعلمة: أ/ هند الراشد</span>
+    </header>
+
+    <!-- الأقسام الثلاثة فقط -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab(1)">
+            <span>1️⃣</span> الشرط البرمجي البسيط (if)
+        </button>
+        <button class="tab-btn" onclick="switchTab(2)">
+            <span>2️⃣</span> الشرط البرمجي البديل (if...else)
+        </button>
+        <button class="tab-btn" onclick="switchTab(3)">
+            <span>3️⃣</span> الشرط المتسلسل (if...elif...else)
+        </button>
+    </div>
+
+    <!-- القسم الأول: الشرط البسيط -->
+    <div id="section1" class="section-content active">
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🎡</span>
+                <div>
+                    <h2>القسم الأول: الشرط البرمجي البسيط (if)</h2>
+                    <p style="color: #666;">استخدام التعليمة <code>count()</code> لحساب أصوات استفتاء رحلة أبراج الكويت لاتخاذ قرار بسيط.</p>
+                </div>
+            </div>
+
+            <!-- الكود البرمجي البرمجي المطلوب كاملاً LTR -->
+            <div class="code-box">
+<span class="code-keyword">trip</span> = <span class="code-string">'''answer the question: Do you agree to go
+Abrag of kuwait trip? answer with (yes) or (no),
+Dana answer with yes, sara answer with yes,
+reem answer with no, lora answer with yes,
+rawan answer with no, maha answer with no
+mona answer with yes'''</span>
+
+voit_y = <span class="code-keyword">trip</span>.<span class="code-func">count</span>(<span class="code-string">'yes'</span>)
+voit_n = <span class="code-keyword">trip</span>.<span class="code-func">count</span>(<span class="code-string">'no'</span>)
+
+<span class="code-func">print</span>(voit_y)
+<span class="code-func">print</span>(voit_n)
+
+<span class="code-keyword">if</span> voit_y > voit_n:
+    <span class="code-func">print</span>(<span class="code-string">'The trip to Abrag of Kuwait is accepted'</span>)
+            </div>
+
+            <button class="action-btn" onclick="runSection1()">
+                ▶ تشغيل الكود ومعاينة النتيجة
+            </button>
+
+            <div class="output-console" id="output1">
+                > اضغطي على زر التشغيل لرؤية النتيجة...
+            </div>
+
+            <!-- التفاعل البصري: أبراج الكويت -->
+            <div class="illustration-area" id="illust1">
+                <div style="text-align: center;">
+                    <svg class="towers-svg" id="towersIcon" viewBox="0 0 100 150">
+                        <!-- رسم تبسيطي زاهي لأبراج الكويت -->
+                        <path d="M50 140 L50 10" stroke="#8A4FFF" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="50" cy="90" r="18" fill="#4CC9F0" />
+                        <circle cx="50" cy="45" r="12" fill="#FF6B9B" />
+                        <path d="M25 140 L25 50" stroke="#8A4FFF" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="25" cy="85" r="10" fill="#FFD166" />
+                        <rect x="10" y="138" width="80" height="6" fill="#06D6A0" rx="3"/>
+                    </svg>
+                    <p id="towerStatusText" style="font-weight: bold; color: var(--purple-main); margin-top: 10px;">في انتظار النتيجة...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- القسم الثاني: الشرط البديل -->
+    <div id="section2" class="section-content">
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🔀</span>
+                <div>
+                    <h2>القسم الثاني: الشرط البرمجي البديل (if...else)</h2>
+                    <p style="color: #666;">إضافة المسار البديل <code>else</code> للتعامل مع عدم تحقق الشرط (إذا كانت أصوات Yes مساوية أو أقل من No).</p>
+                </div>
+            </div>
+
+            <div class="code-box">
+<span class="code-keyword">if</span> voit_y > voit_n:
+    <span class="code-func">print</span>(<span class="code-string">'The trip to Abrag of Kuwait is accepted'</span>)
+<span class="code-keyword">else</span>:
+    <span class="code-func">print</span>(<span class="code-string">'the trip is not accepted'</span>)
+            </div>
+
+            <!-- لوحة التحكم التفاعلية بالأصوات -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h3 style="color: var(--purple-main);">🎮 جربي تغيير عدد أصوات الاستفتاء مباشرة:</h3>
+            </div>
+
+            <div class="vote-controls">
+                <div class="vote-card">
+                    <h4>أصوات (Yes) 👍</h4>
+                    <div class="vote-val" id="valY">4</div>
+                    <div>
+                        <button class="counter-btn" onclick="changeVote('y', -1)">-</button>
+                        <button class="counter-btn" onclick="changeVote('y', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="vote-card">
+                    <h4>أصوات (No) 👎</h4>
+                    <div class="vote-val" id="valN">3</div>
+                    <div>
+                        <button class="counter-btn" onclick="changeVote('n', -1)">-</button>
+                        <button class="counter-btn" onclick="changeVote('n', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-console" id="output2">
+                > voit_y = 4 | voit_n = 3 <br>> The trip to Abrag of Kuwait is accepted
+            </div>
+
+            <div class="illustration-area" id="illust2" style="background: #FFF5F8;">
+                <div id="decisionCard" style="padding: 15px 30px; border-radius: 16px; background: white; border: 3px solid var(--green-bright); font-size: 1.3rem; font-weight: bold; color: var(--green-bright);">
+                    🎉 القرار الحالي: تم قبول الرحلة إلى أبراج الكويت!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- القسم الثالث: الشرط المتسلسل -->
+    <div id="section3" class="section-content">
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">💶</span>
+                <div>
+                    <h2>القسم الثالث: الشرط البرمجي المتسلسل (if...elif...else)</h2>
+                    <p style="color: #666;">استخدام الدالة <code>find('.')</code> لاكتشاف موقع النقطة وتصنيف الفئات النقدية (دنانير، عشرات، مئات).</p>
+                </div>
+            </div>
+
+            <div class="code-box">
+money = <span class="code-string">'361.150'</span>
+value = money.<span class="code-func">find</span>(<span class="code-string">'.'</span>)
+
+<span class="code-keyword">if</span> value == <span class="code-num">3</span>:
+    <span class="code-func">print</span>(<span class="code-string">'the money is hundreds of denars'</span>)
+<span class="code-keyword">elif</span> value == <span class="code-num">2</span>:
+    <span class="code-func">print</span>(<span class="code-string">'the money is tenths of denars'</span>)
+<span class="code-keyword">elif</span> value == <span class="code-num">1</span>:
+    <span class="code-func">print</span>(<span class="code-string">'the money is denars'</span>)
+<span class="code-keyword">else</span>:
+    <span class="code-func">print</span>(<span class="code-string">'the money not allowed'</span>)
+            </div>
+
+            <!-- عرض الفهرسة البصرية LTR -->
+            <div style="text-align: center; margin-top: 15px;">
+                <h4 style="color: var(--purple-main);">📍 الفهرسة التفاعلية للنص (من اليسار إلى اليمين LTR):</h4>
+                <div class="index-visualizer" id="indexVisualizer">
+                    <!-- سيتم توليد خانات الفهرس بواسطة JS -->
+                </div>
+            </div>
+
+            <!-- إدخال مبلغ مجرب -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
+                <label style="font-weight: bold; font-size: 1.1rem;">أدخلي الملبغ التجريبي:</label>
+                <input type="text" id="moneyInput" value="361.150" style="padding: 10px 15px; border-radius: 12px; border: 2px solid var(--purple-main); font-family: 'Fira Code', monospace; font-size: 1.1rem; width: 140px; text-align: center; direction: ltr;">
+                <button class="action-btn" onclick="analyzeMoney()" style="padding: 10px 20px; font-size: 1rem;">فحص الفئة</button>
+            </div>
+
+            <div class="output-console" id="output3">
+                > value = 3 <br>> the money is hundreds of denars
+            </div>
+
+            <div class="illustration-area">
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 5px;">🇰🇼 💵</div>
+                    <div class="money-badge" id="moneyCategoryText">الفئة النقدية: مئات الدنانير (Hundreds of Denars)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- البرمجة والتفاعل JS -->
+    <script>
+        // التنقل بين التبويبات الثلاثة فقط
+        function switchTab(tabIndex) {
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === (tabIndex - 1));
+            });
+
+            document.querySelectorAll('.section-content').forEach((sec, idx) => {
+                sec.classList.toggle('active', idx === (tabIndex - 1));
+            });
+
+            if(tabIndex === 3) {
+                analyzeMoney();
+            }
+        }
+
+        // القسم الأول: تنفيذ الشرط البسيط
+        function runSection1() {
+            const voit_y = 4;
+            const voit_n = 3;
+            const out = document.getElementById('output1');
+            const towers = document.getElementById('towersIcon');
+            const towerText = document.getElementById('towerStatusText');
+
+            out.innerHTML = `> ${voit_y}<br>> ${voit_n}<br>> The trip to Abrag of Kuwait is accepted`;
+            
+            towers.classList.add('bounce');
+            towerText.innerText = "🎉 تم قبول الرحلة إلى أبراج الكويت!";
+            towerText.style.color = "var(--pink-main)";
+
+            // إطلاق قصاصات ملونة
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // القسم الثاني: تحكم أصوات الشرط البديل
+        let vY = 4;
+        let vN = 3;
+
+        function changeVote(type, delta) {
+            if (type === 'y') vY = Math.max(0, vY + delta);
+            if (type === 'n') vN = Math.max(0, vN + delta);
+
+            document.getElementById('valY').innerText = vY;
+            document.getElementById('valN').innerText = vN;
+
+            const out = document.getElementById('output2');
+            const card = document.getElementById('decisionCard');
+
+            if (vY > vN) {
+                out.innerHTML = `> voit_y = ${vY} | voit_n = ${vN}<br>> The trip to Abrag of Kuwait is accepted`;
+                card.innerText = "🎉 القرار الحالي: تم قبول الرحلة إلى أبراج الكويت!";
+                card.style.borderColor = "var(--green-bright)";
+                card.style.color = "var(--green-bright)";
+            } else {
+                out.innerHTML = `> voit_y = ${vY} | voit_n = ${vN}<br>> the trip is not accepted`;
+                card.innerText = "❌ القرار الحالي: الرحلة غير مقبولة (الأصوات غير كافية)";
+                card.style.borderColor = "var(--pink-main)";
+                card.style.color = "var(--pink-main)";
+            }
+        }
+
+        // القسم الثالث: تحليل المبالغ والفهرسة LTR
+        function analyzeMoney() {
+            const moneyVal = document.getElementById('moneyInput').value;
+            const visualizer = document.getElementById('indexVisualizer');
+            visualizer.innerHTML = '';
+
+            const dotIndex = moneyVal.indexOf('.');
+
+            // بناء خانات الفهرسة LTR من اليسار لليمين
+            for (let i = 0; i < moneyVal.length; i++) {
+                const char = moneyVal[i];
+                const item = document.createElement('div');
+                item.className = 'index-item' + (i === dotIndex ? ' highlight' : '');
+                item.innerHTML = `
+                    <span class="char-val">${char}</span>
+                    <span class="idx-val">${i}</span>
+                `;
+                visualizer.appendChild(item);
+            }
+
+            const out = document.getElementById('output3');
+            const badge = document.getElementById('moneyCategoryText');
+
+            if (dotIndex === 3) {
+                out.innerHTML = `> value = ${dotIndex}<br>> the money is hundreds of denars`;
+                badge.innerText = "الفئة النقدية: مئات الدنانير (Hundreds of Denars)";
+                badge.style.background = "var(--yellow-bright)";
+            } else if (dotIndex === 2) {
+                out.innerHTML = `> value = ${dotIndex}<br>> the money is tenths of denars`;
+                badge.innerText = "الفئة النقدية: عشرات الدنانير (Tenths of Denars)";
+                badge.style.background = "var(--blue-bright)";
+            } else if (dotIndex === 1) {
+                out.innerHTML = `> value = ${dotIndex}<br>> the money is denars`;
+                badge.innerText = "الفئة النقدية: دنانير (Denars)";
+                badge.style.background = "var(--pink-soft)";
+            } else {
+                out.innerHTML = `> value = ${dotIndex}<br>> the money not allowed`;
+                badge.innerText = "الفئة غير مقبولة (Not Allowed)";
+                badge.style.background = "#E0E0E0";
+            }
+        }
+
+        // تشغيل الفحص التلقائي عند التحميل
+        window.onload = function() {
+            analyzeMoney();
+        };
+    </script>
+</body>
+</html>
